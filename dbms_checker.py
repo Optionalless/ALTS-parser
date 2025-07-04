@@ -1,6 +1,13 @@
 import xml.etree.ElementTree as Xml
 import re
 import os
+from parse_mssql import MSSQL
+from parse_mysql import MySQL
+from parse_postgresql import PostgreSQL
+
+mssql = MSSQL()
+mysql = MySQL()
+postgresql = PostgreSQL()
 
 # Finding ALTS_files in current directory and adding this in [listing]
 dir_files = os.listdir()
@@ -88,3 +95,22 @@ def check_postgresql() -> str | None:
     name = " ".join(field[0:2])
 
     return name
+
+
+def call_all_funcs():
+    result_mysql = check_mysql()
+    if result_mysql == "MySQL" or result_mysql == "MariaDB":
+        # MySQL parser
+        data = mysql.call_all_fucs(listing)
+        return data
+    else:
+        result_mssql = check_mssql()
+        if result_mssql[0:9] == "Microsoft":
+            # MSSQL parser
+            data = mssql.call_all_fucs(listing)
+            return data
+        else:
+            result_postgresql = check_postgresql()
+            if result_postgresql[0:10] == "PostgreSQL":
+                data = postgresql.call_all_fucs(listing)
+                return data
