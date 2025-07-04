@@ -27,6 +27,12 @@
 - Топ-10 событий хранимых в базе данных
 </details>
 
+### Проверено со следующими СУБД KSC:
+- Microsoft SQL (MSSQL)
+- PostgreSQL
+- MariaDB
+- MySQL
+
 ## Как получить результирующие файлы
 ### Результирующие файлы - это выгрузка из базы данных Kaspersky Security Center, предоставляются .xml-файлы с выгрузкой таблиц
 ### Для получения файлов необходимо:
@@ -38,9 +44,3 @@
 cd "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Security Center"
 
 .\klsql2 -i all_tables_sizes_mssqlsrv.sql -o result.xml
-
-### Проверено со следующими СУБД KSC:
-- Microsoft SQL (MSSQL)
-- PostgreSQL
-- MariaDB
-- MySQL
