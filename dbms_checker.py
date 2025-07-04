@@ -54,8 +54,13 @@ def check_mysql() -> str | None:
     root = tree.getroot()
 
     field = root.find("record/field")
-    value = field.get("value")
-    name = "MySQL" if value[-3:] == "log" else "MariaDB"
+    name = field.get("name")
+    if name == "VERSION()":
+        value = field.get("value")
+        checker = value.split("-")[1]
+        name = "MySQL" if value[-3:] == "log" else checker
+    else:
+        return None
 
     return name
 
