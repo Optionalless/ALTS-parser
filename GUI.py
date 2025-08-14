@@ -5,8 +5,6 @@ from dbms_checker import call_all_funcs
 
 # Вызываем и получаем данные из результирующих файлов
 data = call_all_funcs()
-print(data.keys())
-print(data["db_size"])
 
 # Создаём главное окно с параметрами
 app = tb.Window(themename="minty", iconphoto=r".\ALTSlogo.png")
