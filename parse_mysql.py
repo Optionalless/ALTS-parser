@@ -4,6 +4,8 @@ import re
 
 class MySQL:
 
+    directory = ""
+
     data = {
         "db_info": {
             "DBMS": "DBMS",  # result-11
@@ -22,21 +24,22 @@ class MySQL:
     }
 
     # search .xml-files in current path
-    @staticmethod
-    def find_files_in_cur_path(pattern, files_cur_path) -> str:
+    def matcher(self, pattern, files_cur_path) -> str:
+        directory = str(self.directory + "\\") if self.directory[-1] != "\\" else self.directory
         for i in files_cur_path:
-            path = re.match(pattern, i)
-            if path is None:
+            match = re.match(pattern, i)
+            if match is None:
                 continue
             else:
-                path = path.group()
-                return path
+                match = match.group()
+                result = directory + match
+                return result
 
     # find from result-7: DBMS, version
     def find_dmbs_upd(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)7\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None
@@ -47,7 +50,7 @@ class MySQL:
         field = root.find("record/field")
         value = field.get("value")
         self.data["db_info"]["DBMS"] = "MySQL" if value[-3:] == "log" else "MariaDB"
-        self.data["db_info"]["db_upd"] = value[:-4]
+        self.data["db_info"]["db_upd"] = value.split("-")[0]
 
         return None
 
@@ -55,7 +58,7 @@ class MySQL:
     def find_name_size(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)5\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None
@@ -80,7 +83,7 @@ class MySQL:
     def find_total_events(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)1\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None
@@ -95,7 +98,7 @@ class MySQL:
     def find_tables_events_counts(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)2\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None

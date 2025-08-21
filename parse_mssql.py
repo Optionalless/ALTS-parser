@@ -4,6 +4,8 @@ import re
 
 class MSSQL:
 
+    directory = ""
+
     data = {
         "db_info": {
             "DBMS": "DBMS",  # result-11
@@ -22,21 +24,22 @@ class MSSQL:
     }
 
     # search .xml-files in current path
-    @staticmethod
-    def find_files_in_cur_path(pattern, files_cur_path) -> str:
+    def matcher(self, pattern, files_cur_path) -> str:
+        directory = str(self.directory + "\\") if self.directory[-1] != "\\" else self.directory
         for i in files_cur_path:
-            path = re.match(pattern, i)
-            if path is None:
+            match = re.match(pattern, i)
+            if match is None:
                 continue
             else:
-                path = path.group()
-                return path
+                match = match.group()
+                result = directory + match
+                return result
 
     # find from result-11: DBMS, db_upd
     def find_dmbs_upd(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)11\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None
@@ -55,7 +58,7 @@ class MSSQL:
     def find_name_owner_created_size(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)7\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None
@@ -69,7 +72,7 @@ class MSSQL:
             if name == "name":
                 self.data["db_info"]["db_name"] = value
             if name == "db_size":
-                self.data["db_size"]["db_size_current"] = value.strip(" ")
+                self.data["db_size"]["db_size_current"] = value.lstrip().split(" ")[0]
             if name == "owner":
                 self.data["db_info"]["db_owner"] = value
             if name == "created":
@@ -81,7 +84,7 @@ class MSSQL:
     def find_maxsize(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)8\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None
@@ -100,7 +103,7 @@ class MSSQL:
     def find_total_events(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)3\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None
@@ -116,7 +119,7 @@ class MSSQL:
     def find_tables_sizes(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)2\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None
@@ -143,7 +146,7 @@ class MSSQL:
     def find_tables_events_counts(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)4\.xml$"
 
-        path = self.find_files_in_cur_path(pattern, files_cur_path)
+        path = self.matcher(pattern, files_cur_path)
 
         if path == "":
             return None

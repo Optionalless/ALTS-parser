@@ -4,13 +4,15 @@ import re
 
 class PostgreSQL:
 
+    directory = ""
+
     data = {
         "db_info": {
             "DBMS": "DBMS",
-            "db_upd": "Undefined",
+            "db_upd": "None",
             "db_name": "db_name",
-            "db_owner": "Undefined",
-            "db_created": "Undefined",
+            "db_owner": "None",
+            "db_created": "None",
         },
         "db_size": {
             "db_size_max": "db_size_max",
@@ -22,15 +24,16 @@ class PostgreSQL:
     }
 
     # search .xml-files in current path
-    @staticmethod
-    def find_files_in_cur_path(pattern, files_cur_path) -> str:
+    def find_files_in_cur_path(self, pattern, files_cur_path) -> str:
+        directory = str(self.directory + "\\") if self.directory[-1] != "\\" else self.directory
         for i in files_cur_path:
-            path = re.match(pattern, i)
-            if path is None:
+            match = re.match(pattern, i)
+            if match is None:
                 continue
             else:
-                path = path.group()
-                return path
+                match = match.group()
+                result = directory + match
+                return result
 
     # find from result-8: DBMS, version
     def find_dmbs_upd(self, files_cur_path) -> None:
@@ -45,7 +48,7 @@ class PostgreSQL:
         root = tree.getroot()
 
         field = root.find("record/field")
-        field = field.get("value").split(" ")
+        field = field.get("value").split(",")
         name = " ".join(field[0:2][:1])
         self.data["db_info"]["DBMS"] = name
 
@@ -70,7 +73,7 @@ class PostgreSQL:
             if name == "database_name":
                 self.data["db_info"]["db_name"] = value
             elif name == "database_size":
-                self.data["db_size"]["db_size_current"] = value.split(".")[0]
+                self.data["db_size"]["db_size_current"] = value.split(" ")[0]
 
         self.data["db_size"]["db_size_max"] = "Unlimited"
 
