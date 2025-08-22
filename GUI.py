@@ -122,7 +122,7 @@ msg_values = f"""{data["db_info"]["DBMS"]}
 {data["db_total_events"]}"""
 
 # --Application with paremeters--
-app = tb.Window(themename="superhero", iconphoto=None)
+app = tb.Window(themename="superhero", iconphoto=r"ALTSlogo.png")
 app.title("ALTS parser")
 app.geometry("690x305")
 app.resizable(False, False)
