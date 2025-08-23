@@ -1,10 +1,9 @@
-# Kaspersky Security Center database tables parser
-Скрипт предназаначен для парсинга результирующих файлов (all_tables_sizes)
-
-## Fast start
+# Kaspersky Security Center database tables parser | KSC DBMS | ALTS
+The script is intended for parsing of resulting files (all_tables_sizes)
 ### Demo
 [![UI-demo.gif](https://i.postimg.cc/3Ng44jY1/UI-demo.gif)](https://postimg.cc/QKdxvTBK)
 
+## Fast start
 ### How to launch application
 1) load the project, put all the files in a single directory;
 2) install Python 3.13 or higher (if absent);
