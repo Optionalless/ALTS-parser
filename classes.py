@@ -8,19 +8,21 @@ class MSSQL:
 
     data = {
         "db_info": {
-            "DBMS": "DBMS",  # result-11
-            "db_upd": "Undefined",  # result-11
-            "db_name": "db_name",  # result-7
-            "db_owner": "Undefined",  # result-7
-            "db_created": "Undefined",  # result-7
+            "DBMS": "N/D",
+            "db_upd": "N/D",
+            "db_name": "N/D",
+            "db_owner": "N/D",
+            "host_name": "N/D",
+            "db_created": "N/D",
         },
         "db_size": {
-            "db_size_max": "db_size_max",  # result-8
-            "db_size_current": "db_size"  # result-7
+            "db_size_max": "N/D",
+            "db_size_current": "0",
+            "unallocated_space": "0",
         },
         "db_tables_sizes": {},
         "db_events_counts": {},
-        "db_total_events": "db_total_events"  # result-3
+        "db_total_events": "0"
     }
 
     # search .xml-files in current path
@@ -47,10 +49,11 @@ class MSSQL:
         tree = Xml.parse(path)
         root = tree.getroot()
         field = root.find("record/field")
-        field = field.get("value").split(" ")
-        name, updates = " ".join(field[0:4]), " ".join(field[4:6])
+        field = field.get("value")
+        name, updates = field[0:25], field.split("(")[2][0:8] if field.split("(")[2][0:2] == "KB" else "None"
         self.data["db_info"]["DBMS"] = name
         self.data["db_info"]["db_upd"] = updates
+        self.data["db_size"]["db_size_max"] = "Express (10 GB)" if "Express" in field else "Unlimited"
 
         return None
 
@@ -74,7 +77,9 @@ class MSSQL:
             if name == "db_size":
                 self.data["db_size"]["db_size_current"] = value.lstrip().split(" ")[0]
             if name == "owner":
-                self.data["db_info"]["db_owner"] = value
+                value_list = value.split("\\")
+                self.data["db_info"]["db_owner"] = value_list[-1]
+                self.data["db_info"]["host_name"] = value_list[0]
             if name == "created":
                 self.data["db_info"]["db_created"] = value
 
@@ -92,10 +97,34 @@ class MSSQL:
         tree = Xml.parse(path)
         root = tree.getroot()
         field = root.findall("record/field")
+        if self.data["db_size"]["db_size_max"] == "Express (10 GB)":
+            pass
+        else:
+            for i in field:
+                if "maxsize" == i.get("name"):
+                    self.data["db_size"]["db_size_max"] = i.get("value")
+                    break
+
+        return None
+
+    # find from result-9: uncltspce
+    def find_unnlocated_space(self, files_cur_path) -> None:
+        pattern = r"^.*(?<!\d)9\.xml$"
+
+        path = self.matcher(pattern, files_cur_path)
+
+        if path == "":
+            return None
+
+        tree = Xml.parse(path)
+        root = tree.getroot()
+        field = root.findall("record/field")
+
         for i in field:
-            if "maxsize" == i.get("name"):
-                self.data["db_size"]["db_size_max"] = i.get("value")
-                break
+            name, value = i.get("name"), i.get("value")
+
+            if name == "unallocated space":
+                self.data["db_size"]["unallocated_space"] = value.split(" ")[0]
 
         return None
 
@@ -174,6 +203,7 @@ class MSSQL:
         self.find_name_owner_created_size(listing)
         self.find_dmbs_upd(listing)
         self.find_maxsize(listing)
+        self.find_unnlocated_space(listing)
         self.find_total_events(listing)
         self.find_tables_sizes(listing)
         self.find_tables_events_counts(listing)
@@ -181,26 +211,7 @@ class MSSQL:
         return self.data
 
 
-class MySQL:
-
-    directory = ""
-
-    data = {
-        "db_info": {
-            "DBMS": "DBMS",  # result-11
-            "db_upd": "Undefined",  # result-11
-            "db_name": "db_name",  # result-7
-            "db_owner": "Undefined",  # result-7
-            "db_created": "Undefined",  # result-7
-        },
-        "db_size": {
-            "db_size_max": "db_size_max",  # result-8
-            "db_size_current": "db_size"  # result-7
-        },
-        "db_tables_sizes": {},
-        "db_events_counts": {},
-        "db_total_events": "db_total_events"  # result-3
-    }
+class MySQL(MSSQL):
 
     # search .xml-files in current path
     def matcher(self, pattern, files_cur_path) -> str:
@@ -233,7 +244,7 @@ class MySQL:
 
         return None
 
-    # find from result-5: name, size current
+    # find from result-5: name, size current, ulctspce
     def find_name_size(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)5\.xml$"
 
@@ -253,6 +264,8 @@ class MySQL:
                 self.data["db_info"]["db_name"] = value
             elif name == "database_size":
                 self.data["db_size"]["db_size_current"] = value.split(".")[0]
+            elif name == "unallocated_space":
+                self.data["db_size"]["unallocated_space"] = value.split(" ")[0]
 
         self.data["db_size"]["db_size_max"] = "Unlimited"
 
@@ -298,28 +311,28 @@ class MySQL:
 
         self.data["db_events_counts"] = dict(sorted(parse.items(), key=lambda item: item[1], reverse=True))
 
-    def find_tables_sizes(self) -> None:
-        try:
-            tree = Xml.parse("resul.xml")
-        except FileNotFoundError:
-            return None
-
-        root = tree.getroot()
-        field = root.findall("record/field")
-        parse = {}
-        name, size = "", ""
-
-        for i in field:
-            i, ii = i.get("name"), i.get("value")
-            if i == "Name":
-                name = ii
-            elif i == "reserved":
-                size = ii
-                parse[name] = size
-
-        self.data["db_tables_sizes"] = dict(sorted(parse.items(), key=lambda item: item[1], reverse=True))
-
-        return None
+    # def find_tables_sizes(self) -> None:
+    #     try:
+    #         tree = Xml.parse("resul.xml")
+    #     except FileNotFoundError:
+    #         return None
+    #
+    #     root = tree.getroot()
+    #     field = root.findall("record/field")
+    #     parse = {}
+    #     name, size = "", ""
+    #
+    #     for i in field:
+    #         i, ii = i.get("name"), i.get("value")
+    #         if i == "Name":
+    #             name = ii
+    #         elif i == "reserved":
+    #             size = ii
+    #             parse[name] = size
+    #
+    #     self.data["db_tables_sizes"] = dict(sorted(parse.items(), key=lambda item: item[1], reverse=True))
+    #
+    #     return None
 
     # call all funcs and return data
     def call_all_fucs(self, listing) -> dict:
@@ -331,26 +344,7 @@ class MySQL:
         return self.data
 
 
-class PostgreSQL:
-
-    directory = ""
-
-    data = {
-        "db_info": {
-            "DBMS": "DBMS",
-            "db_upd": "None",
-            "db_name": "db_name",
-            "db_owner": "None",
-            "db_created": "None",
-        },
-        "db_size": {
-            "db_size_max": "db_size_max",
-            "db_size_current": "db_size"
-        },
-        "db_tables_sizes": {},
-        "db_events_counts": {},
-        "db_total_events": "db_total_events"
-    }
+class PostgreSQL(MSSQL):
 
     # search .xml-files in current path
     def find_files_in_cur_path(self, pattern, files_cur_path) -> str:
@@ -383,7 +377,7 @@ class PostgreSQL:
 
         return None
 
-    # find from result-6: name size
+    # find from result-6: name size uncltspce
     def find_name_size(self, files_cur_path) -> None:
         pattern = r"^.*(?<!\d)6\.xml$"
 
@@ -403,6 +397,8 @@ class PostgreSQL:
                 self.data["db_info"]["db_name"] = value
             elif name == "database_size":
                 self.data["db_size"]["db_size_current"] = value.split(" ")[0]
+            elif name == "unallocated_space":
+                self.data["db_size"]["unallocated_space"] = value.split(" ")[0]
 
         self.data["db_size"]["db_size_max"] = "Unlimited"
 
