@@ -1,9 +1,9 @@
 import xml.etree.ElementTree as Xml
 import re
 import os
-from parse_mssql import MSSQL
-from parse_mysql import MySQL
-from parse_postgresql import PostgreSQL
+from classes import MSSQL
+from classes import MySQL
+from classes import PostgreSQL
 
 
 mssql = MSSQL()
