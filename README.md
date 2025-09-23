@@ -1,7 +1,7 @@
 # Kaspersky Security Center database tables parser | KSC DBMS | ALTS
 The script is intended for parsing of resulting files (all_tables_sizes)
 ### Demo
-[![UI-demo.gif](https://i.postimg.cc/3Ng44jY1/UI-demo.gif)](https://postimg.cc/QKdxvTBK)
+[![demo.gif](https://i.postimg.cc/JzgR58P7/demo.gif)](https://postimg.cc/753vqpFj)
 
 ## Fast start
 ### How to launch application
@@ -26,16 +26,17 @@ User interface version:
 - DB Type
 - Updates
 - DB Name
-- Creator
-- Creation date
+- Owner
+- Created
 
-- Current Volume
-- Maximal Volume
+- Volume
+- Limite
 
 - [Table] Tables in size (MB)
 - [Table] Events stored in the database
 
-- Events count
+- UnlctSpce (Unnalocated space)
+- Evt cnt (Events Count)
 </details>
 
 ### Pars the resulting files from the following DBMS:
